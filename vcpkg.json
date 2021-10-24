@@ -1,0 +1,19 @@
+{
+    "name": "abyssengine",
+    "version-string": "pre-alpha",
+    "dependencies": [
+        "libpng",
+        "zlib",
+        "sdl2",
+        "lua",
+        "ffmpeg",
+        "opus"
+    ],
+    "builtin-baseline": "5568f110b509a9fd90711978a7cb76bae75bb092",
+    "overrides": [
+        {
+            "name": "lua",
+            "version": "5.4.3"
+        }
+    ]
+}

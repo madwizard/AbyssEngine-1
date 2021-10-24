@@ -1,9 +1,70 @@
+/**
+ * Copyright (C) 2021 Tim Sarbin
+ * This file is part of AbyssEngine <https://github.com/AbyssEngine>.
+ *
+ * AbyssEngine is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * AbyssEngine is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with AbyssEngine.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "ini.h"
 #include "util.h"
 #include <libabyss/log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef _WIN32
+size_t getdelim(char **buf, size_t *bufsiz, int delimiter, FILE *fp) {
+    char *ptr, *eptr;
+
+    if (*buf == NULL || *bufsiz == 0) {
+        *bufsiz = BUFSIZ;
+        if ((*buf = malloc(*bufsiz)) == NULL)
+            return 0;
+    }
+
+    for (ptr = *buf, eptr = *buf + *bufsiz;;) {
+        int c = fgetc(fp);
+        if (c == -1) {
+            if (feof(fp)) {
+                size_t diff = (size_t)(ptr - *buf);
+                if (diff != 0) {
+                    *ptr = '\0';
+                    return diff;
+                }
+            }
+            return 0;
+        }
+        *ptr++ = c;
+        if (c == delimiter) {
+            *ptr = '\0';
+            return ptr - *buf;
+        }
+        if (ptr + 2 >= eptr) {
+            char *nbuf;
+            size_t nbufsiz = *bufsiz * 2;
+            size_t d = ptr - *buf;
+            if ((nbuf = realloc(*buf, nbufsiz)) == NULL)
+                return 0;
+            *buf = nbuf;
+            *bufsiz = nbufsiz;
+            eptr = nbuf + nbufsiz;
+            ptr = nbuf + d;
+        }
+    }
+}
+size_t getline(char **buf, size_t *bufsiz, FILE *fp) { return getdelim(buf, bufsiz, '\n', fp); }
+#endif
 
 ini_file *ini_file_load(const char *file_path) {
     ini_file *result = calloc(1, sizeof(ini_file));
@@ -13,7 +74,7 @@ ini_file *ini_file_load(const char *file_path) {
     file = fopen(file_path, "r");
 
     if (file == NULL) {
-        log_error("Cannot load INI file: %s", file_path);
+        free(result);
         return NULL;
     }
 
@@ -144,7 +205,7 @@ void ini_file_destroy_entry(ini_file_entry *source) {
     free(source);
 }
 
-ini_file_entry *ini_file_get_entry(ini_file_category *source, const char* name) {
+ini_file_entry *ini_file_get_entry(ini_file_category *source, const char *name) {
     for (int i = 0; i < source->num_entries; i++) {
         ini_file_entry *entry = source->entries[i];
         if (strcmp(entry->name, name) != 0) {
@@ -157,7 +218,7 @@ ini_file_entry *ini_file_get_entry(ini_file_category *source, const char* name) 
     return NULL;
 }
 
-const char *init_file_get_value(ini_file *source, const char* category, const char *name) {
+const char *init_file_get_value(ini_file *source, const char *category, const char *name) {
     ini_file_category *cat = ini_file_get_category(source, category);
 
     if (cat == NULL) {

@@ -3,5 +3,9 @@
 .vs/
 .vscode/
 cmake-build-*/
+build-*/
 build/
 tags
+out/
+CMakeSettings.json
+vcpkg_installed/

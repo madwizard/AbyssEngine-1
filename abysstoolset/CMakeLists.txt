@@ -13,22 +13,35 @@ configure_file(
 )
 
 target_sources(${PROJECT_NAME}
-    PRIVATE
+        PRIVATE
         src/abt.c
-        src/help.c
-        src/mpqtool.c
-)
+        src/help.c src/help.h
+        src/mpqtool.c src/mpqtool.h
+        )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "abt")
+set_target_properties(${PROJECT_NAME} PROPERTIES
+        OUTPUT_NAME "abt"
+        FOLDER "Applications/"
+        )
 
-include_directories(
+target_include_directories(${PROJECT_NAME} PRIVATE
         ${PROJECT_BINARY_DIR}
-        ${CMAKE_SOURCE_DIR}/libabyss/include
-)
+        )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
+        PRIVATE
         libabyss
-)
+        )
 
-
+if (WIN32)
+    install(TARGETS ${PROJECT_NAME}
+            RUNTIME_DEPENDENCIES
+            PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
+            POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
+            DIRECTORIES C:/DevLibs/bin
+            LIBRARY DESTINATION bin
+            ARCHIVE DESTINATION bin
+            )
+else (WIN32)
+    install(TARGETS ${PROJECT_NAME})
+endif (WIN32)
