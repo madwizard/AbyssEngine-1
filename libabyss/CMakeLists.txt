@@ -1,61 +1,83 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-project(libabyss C)
+# -------------------------------------------------------------------------------------------------
+# Project
+# -------------------------------------------------------------------------------------------------
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
+SET(APP_NAME libabyss)
+
+
+# -------------------------------------------------------------------------------------------------
+# Source Files
+# -------------------------------------------------------------------------------------------------
+
+add_library(${APP_NAME}
+        src/casc.cpp
+        src/cascstream.cpp
+        src/mpq.cpp
+        src/mpqstream.cpp
+        src/palette.cpp
+        src/dc6.cpp
+        src/streamreader.cpp
+        src/pngloader.cpp
+        src/inifile.cpp
+        src/abysssprite.cpp
+        src/audiostream.cpp
+        src/ringbuffer.cpp
+
+        # Strange CASClib inclusion
+        # TODO: depend on it properly
+        ${CASC_SOURCES}
+        )
+
+
+# -------------------------------------------------------------------------------------------------
+# Configuration
+# -------------------------------------------------------------------------------------------------
 
 include(GNUInstallDirs)
-
-find_package(ZLIB REQUIRED)
-
-if (WIN32)
-    find_package(Threads REQUIRED)
-
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    set(THREAD_SRC src/threading_windows.c include/libabyss/threading.h)
-else ()
-    set(THREAD_SRC src/threading_unix.c include/libabyss/threading.h)
-endif ()
-
-add_library(${PROJECT_NAME}
-        # Public
-        src/libabyss.c include/libabyss/libabyss.h
-        src/utils.c include/libabyss/utils.h
-        src/mpq.c include/libabyss/mpq.h
-        src/log.c include/libabyss/log.h
-        src/mpqstream.c include/libabyss/mpqstream.h
-        src/mpqblock.c include/libabyss/mpqblock.h
-        src/palette.c include/libabyss/palette.h
-        src/dcc.c include/libabyss/dcc.h
-        src/dc6.c include/libabyss/dc6.h
-        include/libabyss/boundsdefs.h
-        # Private
-        src/crypto.c src/crypto.h
-        src/blast.c src/blast.h
-        src/compress.c src/compress.h
-        src/streamreader.c src/streamreader.h
-        src/streamwriter.c src/streamwriter.h
-        ${THREAD_SRC}
-        )
+configure_vcpkg()
+set_target_properties(${APP_NAME} PROPERTIES FOLDER "Libraries/")
+target_compile_features(${APP_NAME} PUBLIC cxx_std_20)
 
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-        FOLDER "Libraries/"
-        )
+# -------------------------------------------------------------------------------------------------
+# Includes
+# -------------------------------------------------------------------------------------------------
 
-
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${APP_NAME}
+        PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE
+        ${CascLib_SOURCE_DIR}/src
+        ${FFMPEG_INCLUDE_DIRS}
         )
 
-target_link_libraries(${PROJECT_NAME}
-        ZLIB::ZLIB
-        ${CMAKE_THREAD_LIBS_INIT}
+
+# -------------------------------------------------------------------------------------------------
+# Libraries
+# -------------------------------------------------------------------------------------------------
+
+target_link_libraries(${APP_NAME}
+        PRIVATE
+        PNG::PNG
+        stormlib::stormlib
+        absl::str_format
+        fmt::fmt
+        ${FFMPEG_LIBRARIES}
         )
 
-install(TARGETS libabyss
+
+# -------------------------------------------------------------------------------------------------
+# Installation/Packaging
+# -------------------------------------------------------------------------------------------------
+
+install(TARGETS ${APP_NAME}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
+
+if (WIN32)
+    target_link_libraries(${APP_NAME} PRIVATE ws2_32) # for CASC
+endif ()

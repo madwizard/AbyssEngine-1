@@ -1,19 +1,44 @@
 {
-    "name": "abyssengine",
-    "version-string": "pre-alpha",
-    "dependencies": [
-        "libpng",
-        "zlib",
-        "sdl2",
-        "lua",
-        "ffmpeg",
-        "opus"
-    ],
-    "builtin-baseline": "5568f110b509a9fd90711978a7cb76bae75bb092",
-    "overrides": [
-        {
-            "name": "lua",
-            "version": "5.4.3"
-        }
-    ]
+  "name": "abyssengine",
+  "version-string": "pre-alpha",
+  "dependencies": [
+    "spdlog",
+    "argh",
+    "libpng",
+    "bzip2",
+    "zlib",
+    "sdl2",
+    "lua",
+    "sdl2-ttf",
+    "sol2",
+    "gtest",
+    "cppzmq",
+    "fmt",
+    {
+      "name": "ffmpeg",
+      "features": [
+        "avcodec",
+        "avdevice",
+        "avfilter",
+        "avformat",
+        "avresample",
+        "swscale",
+        "swresample",
+        "ffmpeg"
+      ]
+    },
+    {
+      "name": "abseil",
+      "features": [
+        "cxx17"
+      ]
+    }
+  ],
+  "builtin-baseline": "5568f110b509a9fd90711978a7cb76bae75bb092",
+  "overrides": [
+    {
+      "name": "lua",
+      "version": "5.4.3"
+    }
+  ]
 }
